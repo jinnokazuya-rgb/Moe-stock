@@ -26,6 +26,7 @@
     .toolbar{display:flex;gap:10px;justify-content:space-between;align-items:flex-end;flex-wrap:wrap;margin-bottom:12px}.toolbar-right{display:flex;gap:8px;flex-wrap:wrap}.toolbar-right select{width:auto;min-width:130px}
     .count{font-size:13px;color:var(--muted);font-weight:400}.stock{border:1px solid var(--border);border-radius:18px;background:var(--card);margin-bottom:10px;overflow:hidden}.stock summary{padding:14px;list-style:none}.stock summary::-webkit-details-marker{display:none}.stock-head{display:flex;gap:10px;align-items:flex-start}.badge{font-size:12px;border:1px solid var(--border);border-radius:9px;padding:4px 8px;white-space:nowrap}.rel{font-size:12px;color:var(--muted);margin-bottom:4px}.preview{font-weight:600;line-height:1.5}.stock-body{border-top:1px solid var(--border);padding:14px}.entry{margin-bottom:10px}.entry:last-child{margin-bottom:0}.entry-type{font-size:12px;color:var(--muted);margin-bottom:2px}.entry-text{line-height:1.6}.stock-actions{display:flex;justify-content:flex-end;margin-top:12px}.empty{border:1px dashed var(--border);border-radius:16px;padding:18px;color:var(--muted);font-size:14px}
     .random{border:1px solid var(--border);border-radius:18px;padding:14px;background:#fff;margin-bottom:12px}.hidden{display:none!important}.free{margin-top:8px}.topnote{font-size:12px;color:var(--muted);margin-top:4px}
+.backup-panel{border:1px solid var(--border);border-radius:18px;background:var(--panel);padding:14px;margin-bottom:16px}.backup-head{display:flex;justify-content:space-between;gap:10px;align-items:flex-start;flex-wrap:wrap}.backup-actions{display:flex;gap:8px;flex-wrap:wrap}.backup-actions button{min-height:44px}.import-row{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-top:10px}.import-row select{width:auto;min-width:180px}.file-label{display:inline-flex;align-items:center;justify-content:center;min-height:44px;border-radius:13px;border:1px solid var(--border);background:#fff;padding:10px 14px;cursor:pointer}.file-label input{position:absolute;width:1px;height:1px;opacity:0;pointer-events:none}.backup-status{font-size:12px;color:var(--muted);margin-top:8px;min-height:18px}
     @media(max-width:640px){.grid2{grid-template-columns:1fr}.toolbar{align-items:stretch}.toolbar-right{width:100%}.toolbar-right select,.toolbar-right button{flex:1}.app{padding:14px 10px 40px}.panel{border-radius:18px;padding:14px}}
   </style>
 </head>
@@ -88,6 +89,27 @@
     </form>
   </section>
 
+  <section class="backup-panel" aria-labelledby="backupTitle">
+    <div class="backup-head">
+      <div>
+        <div class="label" id="backupTitle" style="font-size:17px;margin:0">バックアップ・復元</div>
+        <div class="topnote">登録した萌えストックをJSONファイルとして保存・読み込みできます。</div>
+      </div>
+      <div class="backup-actions">
+        <button class="secondary" id="exportBackup" type="button">⬇ バックアップ保存</button>
+        <label class="file-label">⬆ バックアップ読込<input id="importBackup" type="file" accept="application/json,.json"></label>
+      </div>
+    </div>
+    <div class="import-row">
+      <label for="importMode" class="hint">読み込み方法</label>
+      <select id="importMode" aria-label="バックアップの読み込み方法">
+        <option value="merge">現在のデータに追加</option>
+        <option value="replace">現在のデータを全部置き換え</option>
+      </select>
+    </div>
+    <div class="backup-status" id="backupStatus" aria-live="polite"></div>
+  </section>
+
   <section>
     <div class="toolbar">
       <div>
@@ -121,6 +143,7 @@
   const customFromWrap=qs('#customFromWrap'), customToWrap=qs('#customToWrap'), customFrom=qs('#customFrom'), customTo=qs('#customTo');
   const dynamicFields=qs('#dynamicFields'), form=qs('#stockForm'), memo=qs('#memo'), saveCombined=qs('#saveCombined'), saveSeparate=qs('#saveSeparate');
   const formMessage=qs('#formMessage'), clearForm=qs('#clearForm'), filterType=qs('#filterType'), randomBtn=qs('#randomBtn'), randomResult=qs('#randomResult'), stockList=qs('#stockList'), count=qs('#count');
+  const exportBackup=qs('#exportBackup'), importBackup=qs('#importBackup'), importMode=qs('#importMode'), backupStatus=qs('#backupStatus');
 
   let currentWork='ﾇﾇﾉｾ', selectedFrom=new Set(), selectedTo=new Set(), selectedTypes=new Set(['セリフ']);
   let stocks=load();
@@ -130,7 +153,25 @@
     catch(e){ return []; }
   }
   function persist(){ localStorage.setItem(STORAGE_KEY, JSON.stringify(stocks)); }
-  function id(){ return (crypto && crypto.randomUUID) ? crypto.randomUUID() : String(Date.now())+Math.random().toString(16).slice(2); }
+  function backupPayload(){ return { app:'萌えストック', version:1, exportedAt:new Date().toISOString(), stocks }; }
+  function downloadBackup(){
+    const blob=new Blob([JSON.stringify(backupPayload(),null,2)],{type:'application/json'});
+    const url=URL.createObjectURL(blob);
+    const a=document.createElement('a');
+    const d=new Date(), pad=n=>String(n).padStart(2,'0');
+    a.href=url; a.download=`moe-stock-backup_${d.getFullYear()}${pad(d.getMonth()+1)}${pad(d.getDate())}_${pad(d.getHours())}${pad(d.getMinutes())}.json`;
+    document.body.appendChild(a); a.click(); a.remove(); setTimeout(()=>URL.revokeObjectURL(url),1000);
+    backupStatus.textContent=`${stocks.length}件をバックアップしました。`;
+  }
+  function normalizeImported(parsed){
+    const arr=Array.isArray(parsed)?parsed:(parsed&&Array.isArray(parsed.stocks)?parsed.stocks:null);
+    if(!arr) throw new Error('このファイルは萌えストックのバックアップとして読み込めません。');
+    return arr.filter(x=>x&&typeof x==='object'&&typeof x.work==='string'&&typeof x.type==='string'&&x.entries&&typeof x.entries==='object').map(x=>({
+      id:String(x.id||id()), work:x.work, from:Array.isArray(x.from)?x.from.map(String):[], to:Array.isArray(x.to)?x.to.map(String):[],
+      type:x.type, entries:Object.fromEntries(Object.entries(x.entries).map(([k,v])=>[String(k),String(v)])), memo:String(x.memo||''), createdAt:x.createdAt||new Date().toISOString()
+    }));
+  }
+  function id(){ return (typeof crypto!=='undefined' && crypto.randomUUID) ? crypto.randomUUID() : String(Date.now())+Math.random().toString(16).slice(2); }
   function esc(v){ return String(v).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c])); }
   function splitCustom(v){ return v.split(/[、,]/).map(x=>x.trim()).filter(Boolean); }
 
@@ -183,6 +224,27 @@
     if(saveSeparate.checked){ types.forEach(t=>{stocks.push({...base,id:id(),type:t,entries:{[t]:eMap[t]}}); n++;}); }
     persist(); formMessage.textContent=`${n}件ストックしました。`; resetInputs(); render();
   });
+  exportBackup.addEventListener('click',downloadBackup);
+  importBackup.addEventListener('change',async()=>{
+    const file=importBackup.files&&importBackup.files[0]; if(!file) return;
+    try{
+      const imported=normalizeImported(JSON.parse(await file.text()));
+      if(!imported.length) throw new Error('読み込めるストックがありませんでした。');
+      if(importMode.value==='replace'){
+        if(!confirm(`現在の${stocks.length}件を削除し、バックアップの${imported.length}件に置き換えます。よろしいですか？\n\n念のため、先に現在データのバックアップ保存をおすすめします。`)){ importBackup.value=''; return; }
+        stocks=imported;
+      }else{
+        const existingIds=new Set(stocks.map(x=>String(x.id))); let added=0;
+        imported.forEach(item=>{ if(existingIds.has(String(item.id))) item={...item,id:id()}; stocks.push(item); added++; });
+        backupStatus.textContent=`${added}件を現在のストックに追加しました。`;
+      }
+      persist(); render(); randomResult.classList.add('hidden');
+      if(importMode.value==='replace') backupStatus.textContent=`バックアップから${stocks.length}件を復元しました。`;
+    }catch(err){
+      backupStatus.textContent=err&&err.message?err.message:'バックアップの読み込みに失敗しました。';
+    }finally{ importBackup.value=''; }
+  });
+
   randomBtn.addEventListener('click',()=>{ let pool=stocks.filter(s=>s.work===currentWork); if(filterType.value!=='all') pool=pool.filter(s=>s.type===filterType.value); randomResult.classList.remove('hidden'); if(!pool.length){randomResult.innerHTML='<div class="hint">掘り起こせるストックがありません。</div>';return;} const item=pool[Math.floor(Math.random()*pool.length)]; randomResult.innerHTML=`<div class="hint" style="margin-bottom:8px">今日掘り起こされた萌え</div><div class="row" style="margin-bottom:8px"><span class="badge">${esc(item.type)}</span><span class="rel" style="align-self:center;margin:0">${esc(relation(item))}</span></div>${renderEntries(item)}${item.memo?`<div class="entry"><div class="entry-type">補足メモ</div><div class="entry-text">${esc(item.memo)}</div></div>`:''}`; });
 
   setWork('ﾇﾇﾉｾ'); updateTypeButtons(); renderDynamicFields(); render();
