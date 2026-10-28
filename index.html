@@ -1,0 +1,192 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="theme-color" content="#f7f2f5" />
+  <title>萌えストック</title>
+  <style>
+    :root{
+      --bg:#faf8f9; --panel:#ffffff; --card:#ffffff; --text:#2c2529; --muted:#7a6f75;
+      --border:#e8dfe3; --accent:#b66c8e; --accent-bg:#f6e8ef; --danger:#b44f5d;
+      --shadow:0 10px 30px rgba(60,40,50,.06);
+    }
+    *{box-sizing:border-box} body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Noto Sans JP",sans-serif;background:var(--bg);color:var(--text)}
+    button,input,textarea,select{font:inherit} button{cursor:pointer} .app{max-width:920px;margin:0 auto;padding:20px 14px 48px}
+    h1{font-size:clamp(26px,5vw,38px);margin:10px 0 4px} .lead{margin:0 0 18px;color:var(--muted);line-height:1.7}
+    .panel{background:var(--panel);border:1px solid var(--border);border-radius:22px;padding:16px;box-shadow:var(--shadow);margin-bottom:18px}
+    .section{margin-bottom:20px}.section:last-child{margin-bottom:0}.label{font-size:14px;font-weight:700;margin-bottom:8px}.sub{font-size:12px;color:var(--muted);font-weight:400}
+    .grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}.row{display:flex;gap:8px;flex-wrap:wrap}.tabs{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+    .chip,.tab,.primary,.secondary,.danger{min-height:44px;border-radius:13px;border:1px solid var(--border);background:#fff;color:var(--text);padding:10px 14px}
+    .chip.active,.tab.active{background:var(--accent-bg);border-color:var(--accent)} .primary{background:var(--accent-bg);border-color:var(--accent);font-weight:700}.secondary{background:#fff}.danger{color:var(--danger)}
+    textarea,input,select{width:100%;border:1px solid var(--border);background:#fff;border-radius:13px;padding:11px 12px;color:var(--text);font-size:16px}
+    textarea{min-height:92px;resize:vertical;line-height:1.6}.fieldbox{border:1px solid var(--border);border-radius:16px;padding:12px;background:#fff;margin-bottom:10px}.fieldtitle{font-weight:700;font-size:14px;margin-bottom:8px}
+    .savebox{border:1px solid var(--border);border-radius:16px;padding:12px}.checkrow{display:flex;gap:10px;align-items:flex-start;margin:8px 0}.checkrow input{width:auto;margin-top:4px}.hint{font-size:12px;color:var(--muted);line-height:1.5}
+    .actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}.msg{font-size:13px;color:var(--muted);margin-top:8px;min-height:20px}
+    .toolbar{display:flex;gap:10px;justify-content:space-between;align-items:flex-end;flex-wrap:wrap;margin-bottom:12px}.toolbar-right{display:flex;gap:8px;flex-wrap:wrap}.toolbar-right select{width:auto;min-width:130px}
+    .count{font-size:13px;color:var(--muted);font-weight:400}.stock{border:1px solid var(--border);border-radius:18px;background:var(--card);margin-bottom:10px;overflow:hidden}.stock summary{padding:14px;list-style:none}.stock summary::-webkit-details-marker{display:none}.stock-head{display:flex;gap:10px;align-items:flex-start}.badge{font-size:12px;border:1px solid var(--border);border-radius:9px;padding:4px 8px;white-space:nowrap}.rel{font-size:12px;color:var(--muted);margin-bottom:4px}.preview{font-weight:600;line-height:1.5}.stock-body{border-top:1px solid var(--border);padding:14px}.entry{margin-bottom:10px}.entry:last-child{margin-bottom:0}.entry-type{font-size:12px;color:var(--muted);margin-bottom:2px}.entry-text{line-height:1.6}.stock-actions{display:flex;justify-content:flex-end;margin-top:12px}.empty{border:1px dashed var(--border);border-radius:16px;padding:18px;color:var(--muted);font-size:14px}
+    .random{border:1px solid var(--border);border-radius:18px;padding:14px;background:#fff;margin-bottom:12px}.hidden{display:none!important}.free{margin-top:8px}.topnote{font-size:12px;color:var(--muted);margin-top:4px}
+    @media(max-width:640px){.grid2{grid-template-columns:1fr}.toolbar{align-items:stretch}.toolbar-right{width:100%}.toolbar-right select,.toolbar-right button{flex:1}.app{padding:14px 10px 40px}.panel{border-radius:18px;padding:14px}}
+  </style>
+</head>
+<body>
+<main class="app">
+  <h1>萌えストック</h1>
+  <p class="lead">まだ話になっていない「言わせたい」「描きたい」を、断片のまま貯めておく自分用ストック帳。</p>
+
+  <section class="panel">
+    <div class="section">
+      <div class="label">作品</div>
+      <div class="tabs" id="workTabs">
+        <button class="tab active" type="button" data-work="ﾇﾇﾉｾ">ﾇﾇﾉｾ</button>
+        <button class="tab" type="button" data-work="律冬環">律冬環</button>
+      </div>
+    </div>
+
+    <div class="grid2 section">
+      <div>
+        <div class="label">誰が <span class="sub">（複数選択可）</span></div>
+        <div class="row" id="fromButtons"></div>
+        <div id="customFromWrap" class="free hidden"><input id="customFrom" placeholder="自由記入。複数なら「、」区切り"></div>
+      </div>
+      <div>
+        <div class="label">誰に <span class="sub">（複数選択可）</span></div>
+        <div class="row" id="toButtons"></div>
+        <div id="customToWrap" class="free hidden"><input id="customTo" placeholder="自由記入。複数なら「、」区切り"></div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="label">種類 <span class="sub">（複数選択可）</span></div>
+      <div class="row" id="typeButtons">
+        <button class="chip active" type="button" data-type="セリフ">💬 セリフ</button>
+        <button class="chip" type="button" data-type="場面">🎬 場面</button>
+        <button class="chip" type="button" data-type="ポーズ">🖼️ ポーズ</button>
+      </div>
+    </div>
+
+    <form id="stockForm">
+      <div id="dynamicFields"></div>
+
+      <div class="section">
+        <div class="label">補足メモ <span class="sub">（任意）</span></div>
+        <textarea id="memo" placeholder="前後は未定、こういう雰囲気で使いたい…など"></textarea>
+      </div>
+
+      <div class="savebox section">
+        <div class="label">保存方法</div>
+        <label class="checkrow"><input id="saveCombined" type="checkbox" checked><span><strong>まとめて1件として保存</strong><br><span class="hint">選んだセリフ・場面・ポーズをひとまとまりで残します。</span></span></label>
+        <label class="checkrow"><input id="saveSeparate" type="checkbox" checked><span><strong>種類ごとにも保存</strong><br><span class="hint">セリフ、場面、ポーズをそれぞれ単独でも残します。</span></span></label>
+        <div class="hint">両方ONなら「まとめ版＋種類別」を同時に保存します。</div>
+      </div>
+
+      <div class="actions">
+        <button class="primary" type="submit">＋ ストックに追加</button>
+        <button class="secondary" id="clearForm" type="button">入力をクリア</button>
+      </div>
+      <div class="msg" id="formMessage" aria-live="polite"></div>
+    </form>
+  </section>
+
+  <section>
+    <div class="toolbar">
+      <div>
+        <div class="label" style="font-size:18px;margin:0">萌えストック <span class="count" id="count"></span></div>
+        <div class="topnote">この端末のブラウザ内に自動保存されます。</div>
+      </div>
+      <div class="toolbar-right">
+        <select id="filterType" aria-label="種類で絞り込み">
+          <option value="all">すべて</option><option>セリフ</option><option>場面</option><option>ポーズ</option><option>複合</option>
+        </select>
+        <button class="primary" id="randomBtn" type="button">🎲 1件掘り起こす</button>
+      </div>
+    </div>
+    <div id="randomResult" class="random hidden" aria-live="polite"></div>
+    <div id="stockList"></div>
+  </section>
+</main>
+<script>
+(() => {
+  const STORAGE_KEY = 'moe-stock-v1';
+  const characters = { 'ﾇﾇﾉｾ':['久作','雷蔵','三郎'], '律冬環':['律','冬馬','環'] };
+  const fieldConfig = {
+    'セリフ':{title:'💬 セリフ',placeholder:'例：「僕にもちゃんと雷蔵先輩と同じようにしてください」'},
+    '場面':{title:'🎬 場面',placeholder:'例：扱いの違いに気づいて、相手に詰め寄る'},
+    'ポーズ':{title:'🖼️ ポーズ',placeholder:'例：袖を掴んで見上げる'}
+  };
+
+  const qs = s => document.querySelector(s);
+  const qsa = s => [...document.querySelectorAll(s)];
+  const workTabs=qsa('.tab'), fromButtons=qs('#fromButtons'), toButtons=qs('#toButtons'), typeButtons=qsa('#typeButtons .chip');
+  const customFromWrap=qs('#customFromWrap'), customToWrap=qs('#customToWrap'), customFrom=qs('#customFrom'), customTo=qs('#customTo');
+  const dynamicFields=qs('#dynamicFields'), form=qs('#stockForm'), memo=qs('#memo'), saveCombined=qs('#saveCombined'), saveSeparate=qs('#saveSeparate');
+  const formMessage=qs('#formMessage'), clearForm=qs('#clearForm'), filterType=qs('#filterType'), randomBtn=qs('#randomBtn'), randomResult=qs('#randomResult'), stockList=qs('#stockList'), count=qs('#count');
+
+  let currentWork='ﾇﾇﾉｾ', selectedFrom=new Set(), selectedTo=new Set(), selectedTypes=new Set(['セリフ']);
+  let stocks=load();
+
+  function load(){
+    try { const v=JSON.parse(localStorage.getItem(STORAGE_KEY)); return Array.isArray(v)?v:[]; }
+    catch(e){ return []; }
+  }
+  function persist(){ localStorage.setItem(STORAGE_KEY, JSON.stringify(stocks)); }
+  function id(){ return (crypto && crypto.randomUUID) ? crypto.randomUUID() : String(Date.now())+Math.random().toString(16).slice(2); }
+  function esc(v){ return String(v).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c])); }
+  function splitCustom(v){ return v.split(/[、,]/).map(x=>x.trim()).filter(Boolean); }
+
+  function setWork(work){
+    currentWork=work; selectedFrom.clear(); selectedTo.clear(); customFrom.value=''; customTo.value=''; customFromWrap.classList.add('hidden'); customToWrap.classList.add('hidden');
+    workTabs.forEach(b=>b.classList.toggle('active', b.dataset.work===work)); renderPersonButtons(); render(); randomResult.classList.add('hidden');
+  }
+  function makePersonButtons(container, role){
+    container.innerHTML='';
+    [...characters[currentWork],'自由記入'].forEach(name=>{
+      const b=document.createElement('button'); b.type='button'; b.className='chip'; b.textContent=name; b.dataset.name=name;
+      b.addEventListener('click',()=>{
+        const set=role==='from'?selectedFrom:selectedTo, wrap=role==='from'?customFromWrap:customToWrap, input=role==='from'?customFrom:customTo;
+        if(name==='自由記入'){ const open=wrap.classList.contains('hidden'); wrap.classList.toggle('hidden',!open); if(open) input.focus(); updatePersonStates(); return; }
+        set.has(name)?set.delete(name):set.add(name); updatePersonStates();
+      }); container.appendChild(b);
+    });
+  }
+  function renderPersonButtons(){ makePersonButtons(fromButtons,'from'); makePersonButtons(toButtons,'to'); updatePersonStates(); }
+  function updatePersonStates(){
+    fromButtons.querySelectorAll('.chip').forEach(b=>b.classList.toggle('active', selectedFrom.has(b.dataset.name)||(b.dataset.name==='自由記入'&&!customFromWrap.classList.contains('hidden'))));
+    toButtons.querySelectorAll('.chip').forEach(b=>b.classList.toggle('active', selectedTo.has(b.dataset.name)||(b.dataset.name==='自由記入'&&!customToWrap.classList.contains('hidden'))));
+  }
+  function updateTypeButtons(){ typeButtons.forEach(b=>b.classList.toggle('active', selectedTypes.has(b.dataset.type))); }
+  function renderDynamicFields(){
+    const old={}; dynamicFields.querySelectorAll('textarea[data-type]').forEach(el=>old[el.dataset.type]=el.value); dynamicFields.innerHTML='';
+    ['セリフ','場面','ポーズ'].forEach(type=>{ if(!selectedTypes.has(type)) return; const box=document.createElement('div'); box.className='fieldbox'; box.innerHTML=`<div class="fieldtitle">${fieldConfig[type].title}</div><textarea data-type="${type}" placeholder="${fieldConfig[type].placeholder}"></textarea>`; dynamicFields.appendChild(box); box.querySelector('textarea').value=old[type]||''; });
+  }
+  function entries(){ const out={}; dynamicFields.querySelectorAll('textarea[data-type]').forEach(el=>{const v=el.value.trim(); if(v) out[el.dataset.type]=v}); return out; }
+  function fromVals(){ return [...new Set([...selectedFrom,...splitCustom(customFrom.value)])]; }
+  function toVals(){ return [...new Set([...selectedTo,...splitCustom(customTo.value)])]; }
+  function relation(item){ const a=item.from?.length?item.from.join('・'):'？', b=item.to?.length?item.to.join('・'):'？'; return (!item.from?.length&&!item.to?.length)?'人物指定なし':`${a} → ${b}`; }
+  function renderEntries(item){ return Object.entries(item.entries||{}).map(([t,text])=>`<div class="entry"><div class="entry-type">${esc(t)}</div><div class="entry-text">${esc(text)}</div></div>`).join(''); }
+  function render(){
+    let list=stocks.filter(s=>s.work===currentWork); if(filterType.value!=='all') list=list.filter(s=>s.type===filterType.value); count.textContent=`（${list.length}件）`; stockList.innerHTML='';
+    if(!list.length){ stockList.innerHTML='<div class="empty">この条件のストックはまだありません。</div>'; return; }
+    [...list].reverse().forEach(item=>{ const d=document.createElement('details'); d.className='stock'; const first=Object.values(item.entries||{})[0]||''; d.innerHTML=`<summary><div class="stock-head"><span class="badge">${esc(item.type)}</span><div><div class="rel">${esc(relation(item))}</div><div class="preview">${esc(first)}</div></div></div></summary><div class="stock-body">${renderEntries(item)}<div class="entry"><div class="entry-type">補足メモ</div><div class="entry-text">${item.memo?esc(item.memo):'<span style="color:var(--muted)">メモなし</span>'}</div></div><div class="stock-actions"><button class="danger" type="button" data-delete="${item.id}">削除</button></div></div>`; stockList.appendChild(d); });
+    stockList.querySelectorAll('[data-delete]').forEach(b=>b.addEventListener('click',()=>{ if(confirm('このストックを削除しますか？')){ stocks=stocks.filter(s=>s.id!==b.dataset.delete); persist(); render(); }}));
+  }
+  function resetInputs(){ selectedFrom.clear(); selectedTo.clear(); customFrom.value=''; customTo.value=''; customFromWrap.classList.add('hidden'); customToWrap.classList.add('hidden'); memo.value=''; dynamicFields.querySelectorAll('textarea').forEach(el=>el.value=''); updatePersonStates(); }
+
+  workTabs.forEach(b=>b.addEventListener('click',()=>setWork(b.dataset.work)));
+  typeButtons.forEach(b=>b.addEventListener('click',()=>{ const t=b.dataset.type; if(selectedTypes.has(t)){ if(selectedTypes.size===1)return; selectedTypes.delete(t); } else selectedTypes.add(t); updateTypeButtons(); renderDynamicFields(); }));
+  filterType.addEventListener('change',render);
+  clearForm.addEventListener('click',()=>{resetInputs(); formMessage.textContent='';});
+  form.addEventListener('submit',e=>{
+    e.preventDefault(); const eMap=entries(), types=Object.keys(eMap); if(!types.length){formMessage.textContent='内容を1つ以上入力してください。';return;} if(!saveCombined.checked&&!saveSeparate.checked){formMessage.textContent='保存方法を1つ以上選んでください。';return;}
+    const base={work:currentWork,from:fromVals(),to:toVals(),memo:memo.value.trim(),createdAt:new Date().toISOString()}; let n=0;
+    if(saveCombined.checked){ stocks.push({...base,id:id(),type:types.length>1?'複合':types[0],entries:{...eMap}}); n++; }
+    if(saveSeparate.checked){ types.forEach(t=>{stocks.push({...base,id:id(),type:t,entries:{[t]:eMap[t]}}); n++;}); }
+    persist(); formMessage.textContent=`${n}件ストックしました。`; resetInputs(); render();
+  });
+  randomBtn.addEventListener('click',()=>{ let pool=stocks.filter(s=>s.work===currentWork); if(filterType.value!=='all') pool=pool.filter(s=>s.type===filterType.value); randomResult.classList.remove('hidden'); if(!pool.length){randomResult.innerHTML='<div class="hint">掘り起こせるストックがありません。</div>';return;} const item=pool[Math.floor(Math.random()*pool.length)]; randomResult.innerHTML=`<div class="hint" style="margin-bottom:8px">今日掘り起こされた萌え</div><div class="row" style="margin-bottom:8px"><span class="badge">${esc(item.type)}</span><span class="rel" style="align-self:center;margin:0">${esc(relation(item))}</span></div>${renderEntries(item)}${item.memo?`<div class="entry"><div class="entry-type">補足メモ</div><div class="entry-text">${esc(item.memo)}</div></div>`:''}`; });
+
+  setWork('ﾇﾇﾉｾ'); updateTypeButtons(); renderDynamicFields(); render();
+})();
+</script>
+</body>
+</html>
